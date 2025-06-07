@@ -57,42 +57,48 @@ class CityBuilder {
           const distanceFromCenter = Math.sqrt(blockCenter.x * blockCenter.x + blockCenter.z * blockCenter.z);
           
           if (distanceFromCenter < 50) {
-            // Central area - taller buildings
+            // Central area - massive skyscrapers
             const rand = Math.random();
-            if (rand < 0.3) {
-              // Skyscraper
-              height = Math.random() * 80 + 40; // 40-120 units tall
-              width = Math.random() * 8 + 6;    // 6-14 units wide
-              depth = Math.random() * 8 + 6;
-              buildingType = 'skyscraper';
-            } else if (rand < 0.6) {
-              // High-rise
-              height = Math.random() * 40 + 25; // 25-65 units tall
-              width = Math.random() * 6 + 4;    // 4-10 units wide
-              depth = Math.random() * 6 + 4;
-              buildingType = 'high-rise';
+            if (rand < 0.4) {
+              // Super Skyscraper
+              height = Math.random() * 150 + 100; // 100-250 units tall (300-750m)
+              width = Math.random() * 15 + 10;    // 10-25 units wide
+              depth = Math.random() * 15 + 10;
+              buildingType = 'super-skyscraper';
+            } else if (rand < 0.7) {
+              // Mega Skyscraper
+              height = Math.random() * 100 + 60;  // 60-160 units tall (180-480m)
+              width = Math.random() * 12 + 8;     // 8-20 units wide
+              depth = Math.random() * 12 + 8;
+              buildingType = 'mega-skyscraper';
             } else {
-              // Mid-rise
-              height = Math.random() * 25 + 15; // 15-40 units tall
-              width = Math.random() * 5 + 3;    // 3-8 units wide
-              depth = Math.random() * 5 + 3;
-              buildingType = 'mid-rise';
+              // Large High-rise
+              height = Math.random() * 60 + 40;   // 40-100 units tall (120-300m)
+              width = Math.random() * 10 + 6;     // 6-16 units wide
+              depth = Math.random() * 10 + 6;
+              buildingType = 'large-high-rise';
             }
           } else {
-            // Outer area - mixed heights but generally shorter
+            // Outer area - still impressive buildings
             const rand = Math.random();
-            if (rand < 0.1) {
-              // Occasional tall building
-              height = Math.random() * 60 + 30;
-              width = Math.random() * 7 + 5;
-              depth = Math.random() * 7 + 5;
+            if (rand < 0.2) {
+              // Tall building
+              height = Math.random() * 80 + 50;   // 50-130 units tall (150-390m)
+              width = Math.random() * 12 + 8;     // 8-20 units wide
+              depth = Math.random() * 12 + 8;
               buildingType = 'tall';
+            } else if (rand < 0.5) {
+              // Mid-rise towers
+              height = Math.random() * 50 + 30;   // 30-80 units tall (90-240m)
+              width = Math.random() * 8 + 6;      // 6-14 units wide
+              depth = Math.random() * 8 + 6;
+              buildingType = 'mid-rise-tower';
             } else {
-              // Normal buildings
-              height = Math.random() * 30 + 10;
-              width = Math.random() * 4 + 3;
-              depth = Math.random() * 4 + 3;
-              buildingType = 'normal';
+              // Large normal buildings
+              height = Math.random() * 40 + 20;   // 20-60 units tall (60-180m)
+              width = Math.random() * 6 + 4;      // 4-10 units wide
+              depth = Math.random() * 6 + 4;
+              buildingType = 'large-normal';
             }
           }
 
@@ -132,27 +138,31 @@ class CityBuilder {
       }
     });
 
-    // Add iconic Shinjuku-style super tall buildings
+    // Add iconic Shinjuku-style massive landmark towers
     const landmarks = [
-      // Main cluster inspired by Shinjuku skyscrapers
-      { x: -25, z: -25, width: 12, height: 150, depth: 12, name: 'tower1' },
-      { x: -35, z: -15, width: 10, height: 140, depth: 10, name: 'tower2' },
-      { x: -15, z: -35, width: 8, height: 130, depth: 8, name: 'tower3' },
+      // Main cluster - Ultra-tall skyscrapers
+      { x: -25, z: -25, width: 25, height: 300, depth: 25, name: 'tower1' }, // 900m equivalent
+      { x: -40, z: -10, width: 20, height: 280, depth: 20, name: 'tower2' }, // 840m equivalent
+      { x: -10, z: -40, width: 18, height: 260, depth: 18, name: 'tower3' }, // 780m equivalent
       
-      // Secondary cluster
-      { x: 25, z: 25, width: 14, height: 160, depth: 14, name: 'tower4' },
-      { x: 35, z: 15, width: 11, height: 145, depth: 11, name: 'tower5' },
-      { x: 15, z: 35, width: 9, height: 135, depth: 9, name: 'tower6' },
+      // Secondary cluster - Mega towers
+      { x: 25, z: 25, width: 28, height: 320, depth: 28, name: 'tower4' },   // 960m equivalent
+      { x: 40, z: 10, width: 22, height: 290, depth: 22, name: 'tower5' },   // 870m equivalent
+      { x: 10, z: 40, width: 20, height: 270, depth: 20, name: 'tower6' },   // 810m equivalent
       
-      // Outlying tall buildings
-      { x: -60, z: 30, width: 8, height: 90, depth: 8, name: 'outlier1' },
-      { x: 60, z: -30, width: 10, height: 85, depth: 10, name: 'outlier2' },
-      { x: -30, z: 60, width: 9, height: 95, depth: 9, name: 'outlier3' },
-      { x: 30, z: -60, width: 7, height: 80, depth: 7, name: 'outlier4' },
+      // Outlying super-tall buildings
+      { x: -70, z: 40, width: 16, height: 200, depth: 16, name: 'outlier1' }, // 600m equivalent
+      { x: 70, z: -40, width: 18, height: 210, depth: 18, name: 'outlier2' }, // 630m equivalent
+      { x: -40, z: 70, width: 17, height: 190, depth: 17, name: 'outlier3' }, // 570m equivalent
+      { x: 40, z: -70, width: 15, height: 180, depth: 15, name: 'outlier4' }, // 540m equivalent
       
-      // Mixed-use buildings
-      { x: 0, z: -80, width: 16, height: 120, depth: 16, name: 'complex1' },
-      { x: 0, z: 80, width: 18, height: 110, depth: 18, name: 'complex2' },
+      // Massive mixed-use complexes
+      { x: 0, z: -90, width: 35, height: 250, depth: 35, name: 'complex1' },  // 750m equivalent
+      { x: 0, z: 90, width: 40, height: 240, depth: 40, name: 'complex2' },   // 720m equivalent
+      
+      // Corner mega-towers
+      { x: -80, z: -80, width: 20, height: 220, depth: 20, name: 'corner1' }, // 660m equivalent
+      { x: 80, z: 80, width: 22, height: 230, depth: 22, name: 'corner2' },   // 690m equivalent
     ];
 
     landmarks.forEach((landmark) => {
@@ -382,9 +392,11 @@ class CityBuilder {
     }
 
     // Enhanced materials for different building types
-    if (config.type === 'mega-skyscraper') {
+    if (config.type === 'super-skyscraper' || config.name) {
+      materialString += '; emissive: #FFE4B5; emissiveIntensity: 0.3';
+    } else if (config.type === 'mega-skyscraper' || config.type === 'large-high-rise') {
       materialString += '; emissive: #FFE4B5; emissiveIntensity: 0.2';
-    } else if (config.type === 'skyscraper' || config.type === 'high-rise') {
+    } else if (config.type === 'tall' || config.type === 'mid-rise-tower') {
       materialString += '; emissive: #FFE4B5; emissiveIntensity: 0.1';
     }
 
@@ -395,11 +407,13 @@ class CityBuilder {
     // Add windows
     this.addWindowsToBuilding(config);
 
-    // Add rooftop details for some buildings
+    // Add rooftop details only for smaller buildings
     if (Math.random() > 0.7 && 
-        config.type !== "skyscraper" && 
+        config.type !== "super-skyscraper" && 
         config.type !== "mega-skyscraper" && 
-        config.type !== "high-rise") {
+        config.type !== "large-high-rise" &&
+        config.type !== "tall" &&
+        !config.name) {
       this.addRooftopDetails(config);
     }
   }
