@@ -1,0 +1,88 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#ui-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+}
+
+#date-form h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+#weather-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#weather-form label {
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
+}
+
+#weather-form input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+#weather-form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+#weather-form button:hover {
+    background-color: #45a049;
+}
+
+#weather-info {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(240, 240, 240, 0.8);
+    border-radius: 5px;
+    font-size: 14px;
+    display: none;
+}
+
+#weather-info.show {
+    display: block;
+}
+
+#weather-info p {
+    margin: 5px 0;
+}
+
+#weather-scene {
+    width: 100vw;
+    height: 100vh;
+}
+
+@media (max-width: 768px) {
+    #ui-container {
+        left: 10px;
+        top: 10px;
+        padding: 15px;
+        max-width: 250px;
+    }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tokyo Weather WebXR Visualization</title>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="ui-container">
+        <div id="date-form">
+            <h2>東京・新宿の天気シミュレーション</h2>
+            <form id="weather-form">
+                <label for="date-input">日付を選択:</label>
+                <input type="date" id="date-input" required>
+                <label for="time-input">時刻を選択:</label>
+                <input type="time" id="time-input" value="12:00" required>
+                <button type="submit">天気を表示</button>
+            </form>
+            <div id="weather-info"></div>
+        </div>
+    </div>
+
+    <a-scene id="weather-scene" embedded>
+        <!-- Sky -->
+        <a-sky id="sky" color="#87CEEB"></a-sky>
+
+        <!-- Lighting -->
+        <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+        <a-light id="sun" type="directional" position="5 10 5" color="#ffffff" intensity="0.7"></a-light>
+
+        <!-- Ground -->
+        <a-plane id="ground" position="0 0 0" rotation="-90 0 0" width="100" height="100" color="#3a3a3a"></a-plane>
+
+        <!-- City Buildings Container -->
+        <a-entity id="city-buildings"></a-entity>
+
+        <!-- Weather Effects Container -->
+        <a-entity id="weather-effects"></a-entity>
+
+        <!-- Camera -->
+        <a-entity id="camera-rig" position="0 10 30">
+            <a-camera look-controls wasd-controls></a-camera>
+        </a-entity>
+    </a-scene>
+
+    <script src="js/weather-api.js"></script>
+    <script src="js/city-builder.js"></script>
+    <script src="js/weather-effects.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
