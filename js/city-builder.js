@@ -327,18 +327,38 @@ class CityBuilder {
   }
 
   addRoadMarkings() {
-    const markingPositions = [
-      { x: 0, z: 0, width: 180, height: 0.5 },     // Center line horizontal
-      { x: 0, z: 0, width: 0.5, height: 180 },     // Center line vertical
+    const roadWidth = 8;
+    const markingHeight = 0.1; // Height above road surface
+    
+    // Road markings that match actual road segments
+    const markingSegments = [
+      // Main horizontal road center line
+      { x: 0, z: 0, width: 200, height: 0.3, rotation: '0' },
+      
+      // Main vertical road center line  
+      { x: 0, z: 0, width: 0.3, height: 200, rotation: '0' },
+      
+      // Right vertical road center line
+      { x: 40, z: 0, width: 0.3, height: 200, rotation: '0' },
+      
+      // Left vertical road center line
+      { x: -40, z: 0, width: 0.3, height: 200, rotation: '0' },
+      
+      // Top horizontal road center line
+      { x: 0, z: 40, width: 200, height: 0.3, rotation: '0' },
+      
+      // Bottom horizontal road center line
+      { x: 0, z: -40, width: 200, height: 0.3, rotation: '0' },
     ];
     
-    markingPositions.forEach(marking => {
+    markingSegments.forEach(marking => {
       const markingElement = document.createElement('a-plane');
-      markingElement.setAttribute('position', `${marking.x} 0.06 ${marking.z}`);
+      markingElement.setAttribute('position', `${marking.x} ${0.05 + markingHeight} ${marking.z}`);
       markingElement.setAttribute('rotation', '-90 0 0');
       markingElement.setAttribute('width', marking.width);
       markingElement.setAttribute('height', marking.height);
       markingElement.setAttribute('color', '#ffff00');
+      markingElement.setAttribute('material', 'opacity: 0.8; transparent: true');
       this.buildingsContainer.appendChild(markingElement);
     });
   }
