@@ -78,6 +78,55 @@ class WeatherAPI {
         };
     }
 
+    async fetchPrecipitationRanking(days = 30) {
+        const endDate = new Date();
+        const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+        
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
+        const url = `${this.archiveUrl}?latitude=${this.latitude}&longitude=${this.longitude}&start_date=${startDateStr}&end_date=${endDateStr}&daily=precipitation_sum,rain_sum,snowfall_sum,weathercode_max,temperature_2m_max&timezone=Asia/Tokyo`;
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Ranking data fetch failed');
+            
+            const data = await response.json();
+            return this.parseRankingData(data);
+        } catch (error) {
+            console.error('Error fetching precipitation ranking:', error);
+            throw error;
+        }
+    }
+
+    parseRankingData(data) {
+        const daily = data.daily;
+        const rankingData = [];
+        
+        for (let i = 0; i < daily.time.length; i++) {
+            const precipitation = daily.precipitation_sum[i] || 0;
+            const rain = daily.rain_sum[i] || 0;
+            const snowfall = daily.snowfall_sum[i] || 0;
+            const totalPrecipitation = precipitation + snowfall;
+            
+            if (totalPrecipitation > 0) {
+                rankingData.push({
+                    date: daily.time[i],
+                    precipitation: precipitation,
+                    rain: rain,
+                    snowfall: snowfall,
+                    totalPrecipitation: totalPrecipitation,
+                    weatherCode: daily.weathercode_max[i],
+                    weatherCondition: this.getWeatherCondition(daily.weathercode_max[i]),
+                    temperature: daily.temperature_2m_max[i]
+                });
+            }
+        }
+        
+        // Sort by total precipitation (descending)
+        return rankingData.sort((a, b) => b.totalPrecipitation - a.totalPrecipitation);
+    }
+
     getWeatherCondition(code) {
         // WMO Weather interpretation codes
         // https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM

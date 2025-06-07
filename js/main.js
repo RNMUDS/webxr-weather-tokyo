@@ -5,6 +5,13 @@ class WeatherApp {
         this.dateInput = document.getElementById('date-input');
         this.timeInput = document.getElementById('time-input');
         this.weatherInfo = document.getElementById('weather-info');
+        this.rankingToggle = document.getElementById('ranking-toggle');
+        this.rankingContent = document.getElementById('ranking-content');
+        this.loadRankingBtn = document.getElementById('load-ranking-btn');
+        this.rankingList = document.getElementById('ranking-list');
+        
+        this.rankingVisible = false;
+        this.rankingData = [];
         
         this.setupDateConstraints();
         this.setupEventListeners();
@@ -26,6 +33,14 @@ class WeatherApp {
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleWeatherRequest();
+        });
+        
+        this.rankingToggle.addEventListener('click', () => {
+            this.toggleRanking();
+        });
+        
+        this.loadRankingBtn.addEventListener('click', () => {
+            this.loadPrecipitationRanking();
         });
     }
 
@@ -142,6 +157,113 @@ class WeatherApp {
         const minutes = date.getMinutes().toString().padStart(2, '0');
         
         return `${year}年${month}月${day}日 ${hours}:${minutes}`;
+    }
+
+    toggleRanking() {
+        this.rankingVisible = !this.rankingVisible;
+        if (this.rankingVisible) {
+            this.rankingContent.style.display = 'block';
+            this.rankingToggle.textContent = '📈';
+        } else {
+            this.rankingContent.style.display = 'none';
+            this.rankingToggle.textContent = '📊';
+        }
+    }
+
+    async loadPrecipitationRanking() {
+        try {
+            this.loadRankingBtn.textContent = '読み込み中...';
+            this.loadRankingBtn.disabled = true;
+            
+            this.rankingData = await window.weatherAPI.fetchPrecipitationRanking(30);
+            this.displayRanking();
+            
+        } catch (error) {
+            console.error('Failed to load ranking:', error);
+            this.rankingList.innerHTML = '<p style="color: red;">ランキングの読み込みに失敗しました</p>';
+        } finally {
+            this.loadRankingBtn.textContent = 'ランキングを更新';
+            this.loadRankingBtn.disabled = false;
+        }
+    }
+
+    displayRanking() {
+        if (this.rankingData.length === 0) {
+            this.rankingList.innerHTML = '<p>降水データがありません</p>';
+            return;
+        }
+
+        const top10 = this.rankingData.slice(0, 10);
+        let rankingHTML = '<div class="ranking-header">過去30日間 降水量トップ10</div>';
+        
+        top10.forEach((item, index) => {
+            const date = new Date(item.date);
+            const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
+            const weatherIcon = this.getWeatherIcon(item.weatherCondition);
+            const precipitationType = item.snowfall > item.rain ? '雪' : '雨';
+            
+            rankingHTML += `
+                <div class="ranking-item" data-date="${item.date}" data-condition="${item.weatherCondition}">
+                    <div class="ranking-number">${index + 1}</div>
+                    <div class="ranking-info">
+                        <div class="ranking-date">${formattedDate} ${weatherIcon}</div>
+                        <div class="ranking-precipitation">${precipitationType}: ${item.totalPrecipitation.toFixed(1)}mm</div>
+                        <div class="ranking-temp">最高: ${item.temperature.toFixed(1)}°C</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        this.rankingList.innerHTML = rankingHTML;
+        this.setupRankingClickHandlers();
+    }
+
+    setupRankingClickHandlers() {
+        const rankingItems = this.rankingList.querySelectorAll('.ranking-item');
+        rankingItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const date = item.dataset.date;
+                const condition = item.dataset.condition;
+                this.simulateRankingWeather(date, condition);
+            });
+        });
+    }
+
+    async simulateRankingWeather(date, condition) {
+        try {
+            this.weatherInfo.innerHTML = '<p>天気データを読み込み中...</p>';
+            this.weatherInfo.classList.add('show');
+            
+            // Set the date inputs to match the ranking item
+            this.dateInput.value = date;
+            this.timeInput.value = '12:00';
+            
+            // Fetch weather data for that specific date
+            const weatherData = await window.weatherAPI.fetchWeatherData(date, '12:00');
+            
+            // Update visualization
+            this.updateVisualization(weatherData);
+            
+            // Display weather info
+            this.displayWeatherInfo(weatherData);
+            
+        } catch (error) {
+            console.error('Weather simulation error:', error);
+            this.weatherInfo.innerHTML = `<p style="color: red;">シミュレーションエラー: ${error.message}</p>`;
+        }
+    }
+
+    getWeatherIcon(condition) {
+        const icons = {
+            'clear': '☀️',
+            'partly_cloudy': '⛅',
+            'cloudy': '☁️',
+            'fog': '🌫️',
+            'rain': '🌧️',
+            'snow': '❄️',
+            'thunderstorm': '⛈️'
+        };
+        return icons[condition] || '🌤️';
     }
 }
 
