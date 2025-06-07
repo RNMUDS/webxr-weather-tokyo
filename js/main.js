@@ -174,13 +174,27 @@ class WeatherApp {
         try {
             this.loadRankingBtn.textContent = '読み込み中...';
             this.loadRankingBtn.disabled = true;
+            this.rankingList.innerHTML = '<p>天気データを取得中...</p>';
             
-            this.rankingData = await window.weatherAPI.fetchPrecipitationRanking(30);
-            this.displayRanking();
+            console.log('Starting ranking data fetch...');
+            this.rankingData = await window.weatherAPI.fetchPrecipitationRanking(7);
+            console.log('Ranking data received:', this.rankingData);
+            
+            if (this.rankingData && this.rankingData.length > 0) {
+                this.displayRanking();
+            } else {
+                this.rankingList.innerHTML = '<p>データが見つかりませんでした</p>';
+            }
             
         } catch (error) {
             console.error('Failed to load ranking:', error);
-            this.rankingList.innerHTML = '<p style="color: red;">ランキングの読み込みに失敗しました</p>';
+            this.rankingList.innerHTML = `
+                <div style="color: red;">
+                    <p>⚠️ ランキングの読み込みに失敗しました</p>
+                    <p style="font-size: 12px;">エラー: ${error.message}</p>
+                    <p style="font-size: 12px;">コンソールで詳細を確認してください</p>
+                </div>
+            `;
         } finally {
             this.loadRankingBtn.textContent = 'ランキングを更新';
             this.loadRankingBtn.disabled = false;
