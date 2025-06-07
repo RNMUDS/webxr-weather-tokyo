@@ -6,53 +6,115 @@ class CityBuilder {
 
     generateBuildingConfigurations() {
         const configs = [];
-        const gridSize = 8;
-        const spacing = 12;
         
-        // Generate a grid of buildings with varying heights
-        for (let x = -gridSize; x <= gridSize; x++) {
-            for (let z = -gridSize; z <= gridSize; z++) {
-                // Skip center area for better camera view
-                if (Math.abs(x) < 2 && Math.abs(z) < 2) continue;
+        // Define road network to avoid
+        this.roadNetwork = [
+            { x: 0, z: 0, width: 200, height: 8 },     // Main horizontal road
+            { x: 0, z: 0, width: 8, height: 200 },     // Main vertical road
+            { x: 40, z: 0, width: 8, height: 200 },    // Right vertical road
+            { x: -40, z: 0, width: 8, height: 200 },   // Left vertical road
+            { x: 0, z: 40, width: 200, height: 8 },    // Top horizontal road
+            { x: 0, z: -40, width: 200, height: 8 }    // Bottom horizontal road
+        ];
+        
+        // Generate buildings in city blocks
+        const blockCenters = [
+            // Main city blocks
+            { x: -20, z: -20 }, { x: 20, z: -20 }, { x: -20, z: 20 }, { x: 20, z: 20 },
+            // Secondary blocks
+            { x: -60, z: -20 }, { x: 60, z: -20 }, { x: -60, z: 20 }, { x: 60, z: 20 },
+            { x: -20, z: -60 }, { x: 20, z: -60 }, { x: -20, z: 60 }, { x: 20, z: 60 },
+            // Corner blocks
+            { x: -60, z: -60 }, { x: 60, z: -60 }, { x: -60, z: 60 }, { x: 60, z: 60 }
+        ];
+        
+        blockCenters.forEach(blockCenter => {
+            const buildingsInBlock = Math.floor(Math.random() * 6) + 3; // 3-8 buildings per block
+            
+            for (let i = 0; i < buildingsInBlock; i++) {
+                let attempts = 0;
+                let validPosition = false;
+                let position, scale;
                 
-                // Random building properties
-                const height = Math.random() * 30 + 10;
-                const width = Math.random() * 4 + 4;
-                const depth = Math.random() * 4 + 4;
-                
-                configs.push({
-                    position: {
-                        x: x * spacing + (Math.random() - 0.5) * 4,
+                while (!validPosition && attempts < 20) {
+                    // Random building properties
+                    const height = Math.random() * 30 + 10;
+                    const width = Math.random() * 4 + 4;
+                    const depth = Math.random() * 4 + 4;
+                    
+                    // Position within block bounds
+                    position = {
+                        x: blockCenter.x + (Math.random() - 0.5) * 30,
                         y: height / 2,
-                        z: z * spacing + (Math.random() - 0.5) * 4
-                    },
-                    scale: {
-                        x: width,
-                        y: height,
-                        z: depth
-                    },
-                    color: this.generateBuildingColor(),
-                    type: Math.random() > 0.7 ? 'tall' : 'normal'
-                });
+                        z: blockCenter.z + (Math.random() - 0.5) * 30
+                    };
+                    
+                    scale = { x: width, y: height, z: depth };
+                    
+                    // Check if building intersects with roads
+                    if (this.isPositionValidForBuilding(position, scale)) {
+                        validPosition = true;
+                    }
+                    attempts++;
+                }
+                
+                if (validPosition) {
+                    configs.push({
+                        position: position,
+                        scale: scale,
+                        color: this.generateBuildingColor(),
+                        type: Math.random() > 0.7 ? 'tall' : 'normal'
+                    });
+                }
             }
-        }
-        
-        // Add some landmark tall buildings
-        configs.push({
-            position: { x: -20, y: 35, z: -20 },
-            scale: { x: 8, y: 70, z: 8 },
-            color: '#1a1a2e',
-            type: 'skyscraper'
         });
         
-        configs.push({
-            position: { x: 25, y: 30, z: -15 },
-            scale: { x: 10, y: 60, z: 10 },
-            color: '#16213e',
-            type: 'skyscraper'
+        // Add some landmark tall buildings in valid positions
+        const landmarks = [
+            { x: -30, z: -30, width: 8, height: 70, depth: 8 },
+            { x: 30, z: 30, width: 10, height: 60, depth: 10 },
+            { x: -70, z: 30, width: 6, height: 50, depth: 6 },
+            { x: 70, z: -30, width: 8, height: 55, depth: 8 }
+        ];
+        
+        landmarks.forEach(landmark => {
+            const position = { x: landmark.x, y: landmark.height / 2, z: landmark.z };
+            const scale = { x: landmark.width, y: landmark.height, z: landmark.depth };
+            
+            if (this.isPositionValidForBuilding(position, scale)) {
+                configs.push({
+                    position: position,
+                    scale: scale,
+                    color: this.generateBuildingColor(),
+                    type: 'skyscraper'
+                });
+            }
         });
         
         return configs;
+    }
+
+    isPositionValidForBuilding(position, scale) {
+        // Check intersection with roads
+        for (const road of this.roadNetwork) {
+            const buildingLeft = position.x - scale.x / 2;
+            const buildingRight = position.x + scale.x / 2;
+            const buildingTop = position.z + scale.z / 2;
+            const buildingBottom = position.z - scale.z / 2;
+            
+            const roadLeft = road.x - road.width / 2;
+            const roadRight = road.x + road.width / 2;
+            const roadTop = road.z + road.height / 2;
+            const roadBottom = road.z - road.height / 2;
+            
+            // Check for intersection
+            if (buildingLeft < roadRight && buildingRight > roadLeft &&
+                buildingBottom < roadTop && buildingTop > roadBottom) {
+                return false; // Building intersects with road
+            }
+        }
+        
+        return true; // Position is valid
     }
 
     generateBuildingColor() {
@@ -208,10 +270,10 @@ class CityBuilder {
                 const x = config.position.x - config.scale.x/2 + (i + 0.5) * windowSpacing;
                 
                 if (Math.random() > 0.3) { // 70% chance of window
-                    // Front windows
-                    this.createWindow(x, y, config.position.z + config.scale.z/2 + 0.01, '0');
+                    // Front windows - moved further out to avoid z-fighting
+                    this.createWindow(x, y, config.position.z + config.scale.z/2 + 0.1, '0');
                     // Back windows
-                    this.createWindow(x, y, config.position.z - config.scale.z/2 - 0.01, '180');
+                    this.createWindow(x, y, config.position.z - config.scale.z/2 - 0.1, '180');
                 }
             }
             
@@ -221,10 +283,10 @@ class CityBuilder {
                 const z = config.position.z - config.scale.z/2 + (i + 0.5) * windowSpacing;
                 
                 if (Math.random() > 0.3) { // 70% chance of window
-                    // Left windows
-                    this.createWindow(config.position.x - config.scale.x/2 - 0.01, y, z, '90');
+                    // Left windows - moved further out to avoid z-fighting
+                    this.createWindow(config.position.x - config.scale.x/2 - 0.1, y, z, '90');
                     // Right windows
-                    this.createWindow(config.position.x + config.scale.x/2 + 0.01, y, z, '-90');
+                    this.createWindow(config.position.x + config.scale.x/2 + 0.1, y, z, '-90');
                 }
             }
         }
@@ -295,19 +357,20 @@ class CityBuilder {
     }
 
     isPositionClearForTree(x, z) {
-        // Check distance from roads
-        const roadDistance = 6;
-        if (Math.abs(x) < roadDistance || Math.abs(z) < roadDistance ||
-            Math.abs(x - 40) < roadDistance || Math.abs(x + 40) < roadDistance ||
-            Math.abs(z - 40) < roadDistance || Math.abs(z + 40) < roadDistance) {
-            return false;
+        // Check if position intersects with roads using the same logic as buildings
+        const treeSize = 2; // Approximate tree radius
+        const position = { x: x, y: 0, z: z };
+        const scale = { x: treeSize, y: 1, z: treeSize };
+        
+        if (!this.isPositionValidForBuilding(position, scale)) {
+            return false; // Tree would intersect with road
         }
         
         // Check distance from buildings
         return !this.buildingConfigs.some(building => {
             const dx = Math.abs(x - building.position.x);
             const dz = Math.abs(z - building.position.z);
-            return dx < building.scale.x + 5 && dz < building.scale.z + 5;
+            return dx < building.scale.x/2 + 3 && dz < building.scale.z/2 + 3;
         });
     }
 
