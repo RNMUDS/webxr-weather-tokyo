@@ -176,9 +176,9 @@ class WeatherApp {
             this.loadRankingBtn.disabled = true;
             this.rankingList.innerHTML = '<p>天気データを取得中...</p>';
             
-            console.log('Starting ranking data fetch...');
-            this.rankingData = await window.weatherAPI.fetchPrecipitationRanking(7);
-            console.log('Ranking data received:', this.rankingData);
+            console.log('Starting extended ranking data fetch...');
+            this.rankingData = await window.weatherAPI.fetchExtendedPrecipitationRanking(5);
+            console.log('Extended ranking data received:', this.rankingData);
             
             if (this.rankingData && this.rankingData.length > 0) {
                 this.displayRanking();
@@ -207,12 +207,15 @@ class WeatherApp {
             return;
         }
 
-        const top10 = this.rankingData.slice(0, 10);
-        let rankingHTML = '<div class="ranking-header">過去30日間 降水量トップ10</div>';
+        const top20 = this.rankingData.slice(0, 20);
+        const totalDays = this.rankingData.length;
+        const years = Math.round(totalDays / 365 * 10) / 10; // Round to 1 decimal
         
-        top10.forEach((item, index) => {
+        let rankingHTML = `<div class="ranking-header">過去${years}年間 降水量トップ20 (${totalDays}日間)</div>`;
+        
+        top20.forEach((item, index) => {
             const date = new Date(item.date);
-            const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
+            const formattedDate = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
             const weatherIcon = this.getWeatherIcon(item.weatherCondition);
             const precipitationType = item.snowfall > item.rain ? '雪' : '雨';
             

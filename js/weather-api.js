@@ -78,11 +78,20 @@ class WeatherAPI {
         };
     }
 
-    async fetchPrecipitationRanking(days = 7) {
-        // Use shorter period and simpler parameters for better reliability
+    async fetchPrecipitationRanking(days = 365) {
+        // Fetch maximum available historical data (up to 1 year)
         const endDate = new Date();
         endDate.setDate(endDate.getDate() - 1); // Exclude today to get complete data
+        
+        // Open-Meteo archive has data from 1940, but we'll use 1 year for better performance
+        // You can extend this to get more historical data
         const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+        
+        // Ensure we don't go before 1940 (Open-Meteo limit)
+        const minimumDate = new Date('1940-01-01');
+        if (startDate < minimumDate) {
+            startDate.setTime(minimumDate.getTime());
+        }
         
         const startDateStr = startDate.toISOString().split('T')[0];
         const endDateStr = endDate.toISOString().split('T')[0];
@@ -144,6 +153,61 @@ class WeatherAPI {
         }
         
         return fallbackData.sort((a, b) => b.totalPrecipitation - a.totalPrecipitation);
+    }
+
+    async fetchExtendedPrecipitationRanking(years = 5) {
+        // Fetch extended historical data for comprehensive ranking
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() - 1);
+        
+        // Go back specified number of years
+        const startDate = new Date(endDate.getTime() - years * 365 * 24 * 60 * 60 * 1000);
+        
+        // Ensure we don't go before 1940
+        const minimumDate = new Date('1940-01-01');
+        if (startDate < minimumDate) {
+            startDate.setTime(minimumDate.getTime());
+        }
+        
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
+        console.log(`Fetching extended weather ranking from ${startDateStr} to ${endDateStr} (${years} years)`);
+        
+        const url = `${this.archiveUrl}?latitude=${this.latitude}&longitude=${this.longitude}&start_date=${startDateStr}&end_date=${endDateStr}&daily=precipitation_sum,temperature_2m_max&timezone=Asia/Tokyo`;
+        
+        console.log('Extended API URL:', url);
+        
+        try {
+            const response = await fetch(url);
+            console.log('Extended response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Extended API Error Response:', errorText);
+                throw new Error(`Extended API request failed: ${response.status} - ${errorText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Extended raw API data sample:', {
+                totalDays: data.daily?.time?.length,
+                firstDate: data.daily?.time?.[0],
+                lastDate: data.daily?.time?.[data.daily?.time?.length - 1],
+                precipitationSample: data.daily?.precipitation_sum?.slice(0, 10)
+            });
+            
+            if (!data.daily || !data.daily.time) {
+                console.error('Invalid extended data structure:', data);
+                throw new Error('Invalid data format received from extended API');
+            }
+            
+            return this.parseRankingData(data);
+        } catch (error) {
+            console.error('Error fetching extended precipitation ranking:', error);
+            // Fall back to shorter period
+            console.log('Falling back to 1-year data...');
+            return this.fetchPrecipitationRanking(365);
+        }
     }
 
     parseRankingData(data) {

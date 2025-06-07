@@ -199,7 +199,7 @@ class CityBuilder {
         
         roadPositions.forEach(road => {
             const roadElement = document.createElement('a-plane');
-            roadElement.setAttribute('position', `${road.x} 0.01 ${road.z}`);
+            roadElement.setAttribute('position', `${road.x} 0.05 ${road.z}`);
             roadElement.setAttribute('rotation', `-90 ${road.rotation} 0`);
             roadElement.setAttribute('width', road.width);
             roadElement.setAttribute('height', road.height);
@@ -220,7 +220,7 @@ class CityBuilder {
         
         markingPositions.forEach(marking => {
             const markingElement = document.createElement('a-plane');
-            markingElement.setAttribute('position', `${marking.x} 0.02 ${marking.z}`);
+            markingElement.setAttribute('position', `${marking.x} 0.06 ${marking.z}`);
             markingElement.setAttribute('rotation', '-90 0 0');
             markingElement.setAttribute('width', marking.width);
             markingElement.setAttribute('height', marking.height);
@@ -366,11 +366,11 @@ class CityBuilder {
             return false; // Tree would intersect with road
         }
         
-        // Check distance from buildings
+        // Check distance from buildings - increased buffer distance
         return !this.buildingConfigs.some(building => {
             const dx = Math.abs(x - building.position.x);
             const dz = Math.abs(z - building.position.z);
-            return dx < building.scale.x/2 + 3 && dz < building.scale.z/2 + 3;
+            return dx < building.scale.x/2 + 8 && dz < building.scale.z/2 + 8;
         });
     }
 
