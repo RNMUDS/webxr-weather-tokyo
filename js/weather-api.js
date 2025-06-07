@@ -80,18 +80,31 @@ class WeatherAPI {
 
     async fetchPrecipitationRanking(days = 30) {
         const endDate = new Date();
+        endDate.setDate(endDate.getDate() - 1); // Exclude today to get complete data
         const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
         
         const startDateStr = startDate.toISOString().split('T')[0];
         const endDateStr = endDate.toISOString().split('T')[0];
         
-        const url = `${this.archiveUrl}?latitude=${this.latitude}&longitude=${this.longitude}&start_date=${startDateStr}&end_date=${endDateStr}&daily=precipitation_sum,rain_sum,snowfall_sum,weathercode_max,temperature_2m_max&timezone=Asia/Tokyo`;
+        console.log(`Fetching weather ranking from ${startDateStr} to ${endDateStr}`);
+        
+        const url = `${this.archiveUrl}?latitude=${this.latitude}&longitude=${this.longitude}&start_date=${startDateStr}&end_date=${endDateStr}&daily=precipitation_sum,rain_sum,snowfall_sum,weathercode_max,temperature_2m_max,cloudcover_mean&timezone=Asia/Tokyo`;
         
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Ranking data fetch failed');
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`API request failed: ${response.status}`);
+            }
             
             const data = await response.json();
+            console.log('Raw API data:', data);
+            
+            if (!data.daily || !data.daily.time) {
+                throw new Error('Invalid data format received from API');
+            }
+            
             return this.parseRankingData(data);
         } catch (error) {
             console.error('Error fetching precipitation ranking:', error);
@@ -103,28 +116,38 @@ class WeatherAPI {
         const daily = data.daily;
         const rankingData = [];
         
+        console.log('Parsing daily data length:', daily.time.length);
+        console.log('Sample precipitation data:', daily.precipitation_sum?.slice(0, 5));
+        
         for (let i = 0; i < daily.time.length; i++) {
-            const precipitation = daily.precipitation_sum[i] || 0;
-            const rain = daily.rain_sum[i] || 0;
-            const snowfall = daily.snowfall_sum[i] || 0;
-            const totalPrecipitation = precipitation + snowfall;
+            const precipitation = daily.precipitation_sum?.[i] || 0;
+            const rain = daily.rain_sum?.[i] || 0;
+            const snowfall = daily.snowfall_sum?.[i] || 0;
+            const totalPrecipitation = precipitation;
             
-            if (totalPrecipitation > 0) {
-                rankingData.push({
-                    date: daily.time[i],
-                    precipitation: precipitation,
-                    rain: rain,
-                    snowfall: snowfall,
-                    totalPrecipitation: totalPrecipitation,
-                    weatherCode: daily.weathercode_max[i],
-                    weatherCondition: this.getWeatherCondition(daily.weathercode_max[i]),
-                    temperature: daily.temperature_2m_max[i]
-                });
-            }
+            // Include all days, even with 0 precipitation for testing
+            rankingData.push({
+                date: daily.time[i],
+                precipitation: precipitation,
+                rain: rain,
+                snowfall: snowfall,
+                totalPrecipitation: totalPrecipitation,
+                weatherCode: daily.weathercode_max?.[i] || 0,
+                weatherCondition: this.getWeatherCondition(daily.weathercode_max?.[i] || 0),
+                temperature: daily.temperature_2m_max?.[i] || 20,
+                cloudCover: daily.cloudcover_mean?.[i] || 0
+            });
         }
         
+        console.log('Total ranking data items:', rankingData.length);
+        console.log('Sample ranking items:', rankingData.slice(0, 3));
+        
         // Sort by total precipitation (descending)
-        return rankingData.sort((a, b) => b.totalPrecipitation - a.totalPrecipitation);
+        const sorted = rankingData.sort((a, b) => b.totalPrecipitation - a.totalPrecipitation);
+        
+        // Return top items with precipitation > 0, or top 10 if no precipitation
+        const withPrecipitation = sorted.filter(item => item.totalPrecipitation > 0);
+        return withPrecipitation.length > 0 ? withPrecipitation : sorted.slice(0, 10);
     }
 
     getWeatherCondition(code) {
