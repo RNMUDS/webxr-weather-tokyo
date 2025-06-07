@@ -5,6 +5,7 @@ class CityBuilder {
   }
 
   generateBuildingConfigurations() {
+    console.log('Starting building generation...');
     const configs = [];
 
     // Define road network to avoid
@@ -46,11 +47,11 @@ class CityBuilder {
       for (let i = 0; i < buildingsInBlock; i++) {
         let attempts = 0;
         let validPosition = false;
-        let position, scale;
+        let position, scale, buildingType;
 
         while (!validPosition && attempts < 20) {
           // More realistic Shinjuku building properties
-          let height, width, depth, buildingType;
+          let height, width, depth;
           
           // Determine building type and size based on location
           const distanceFromCenter = Math.sqrt(blockCenter.x * blockCenter.x + blockCenter.z * blockCenter.z);
@@ -105,20 +106,28 @@ class CityBuilder {
           scale = { x: width, y: height, z: depth };
 
           // Check if building intersects with roads or other buildings
-          if (this.isPositionValidForBuilding(position, scale) && 
-              this.isPositionValidForBuildingCollision(position, scale, configs)) {
+          const roadValid = this.isPositionValidForBuilding(position, scale);
+          const buildingValid = this.isPositionValidForBuildingCollision(position, scale, configs);
+          
+          console.log(`Attempt ${attempts}: roadValid=${roadValid}, buildingValid=${buildingValid}, type=${buildingType}`);
+          
+          if (roadValid && buildingValid) {
             validPosition = true;
           }
           attempts++;
         }
 
         if (validPosition) {
-          configs.push({
+          const buildingConfig = {
             position: position,
             scale: scale,
             color: this.generateBuildingColor(),
             type: buildingType,
-          });
+          };
+          configs.push(buildingConfig);
+          console.log(`Added building ${configs.length}: type=${buildingType}, height=${scale.y}`);
+        } else {
+          console.log(`Failed to place building in block ${blockCenter.x},${blockCenter.z} after ${attempts} attempts`);
         }
       }
     });
@@ -166,6 +175,8 @@ class CityBuilder {
       }
     });
 
+    console.log(`Generated ${configs.length} buildings`);
+    console.log('Sample building configs:', configs.slice(0, 3));
     return configs;
   }
 
@@ -254,6 +265,9 @@ class CityBuilder {
   }
 
   buildCity() {
+    console.log('Building city...');
+    console.log('Building configs available:', this.buildingConfigs?.length || 'undefined');
+    
     // Clear existing buildings
     while (this.buildingsContainer.firstChild) {
       this.buildingsContainer.removeChild(this.buildingsContainer.firstChild);
@@ -263,9 +277,14 @@ class CityBuilder {
     this.createGroundAndRoads();
 
     // Create buildings with windows
-    this.buildingConfigs.forEach((config, index) => {
-      this.createBuildingWithWindows(config, index);
-    });
+    if (this.buildingConfigs && this.buildingConfigs.length > 0) {
+      console.log('Creating buildings...');
+      this.buildingConfigs.forEach((config, index) => {
+        this.createBuildingWithWindows(config, index);
+      });
+    } else {
+      console.error('No building configs available!');
+    }
 
     // Add street trees
     this.addStreetTrees();
@@ -301,6 +320,26 @@ class CityBuilder {
       roadElement.setAttribute("color", "#2c2c2c");
       roadElement.setAttribute("material", "roughness: 0.8");
       this.buildingsContainer.appendChild(roadElement);
+    });
+    
+    // Add road markings
+    this.addRoadMarkings();
+  }
+
+  addRoadMarkings() {
+    const markingPositions = [
+      { x: 0, z: 0, width: 180, height: 0.5 },     // Center line horizontal
+      { x: 0, z: 0, width: 0.5, height: 180 },     // Center line vertical
+    ];
+    
+    markingPositions.forEach(marking => {
+      const markingElement = document.createElement('a-plane');
+      markingElement.setAttribute('position', `${marking.x} 0.06 ${marking.z}`);
+      markingElement.setAttribute('rotation', '-90 0 0');
+      markingElement.setAttribute('width', marking.width);
+      markingElement.setAttribute('height', marking.height);
+      markingElement.setAttribute('color', '#ffff00');
+      this.buildingsContainer.appendChild(markingElement);
     });
   }
 
